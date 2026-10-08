@@ -1,0 +1,12 @@
+.tools/
+.gradle/
+.kotlin/
+**/build/
+local.properties
+.env
+*.jks
+*.keystore
+verification/*.log
+deploy/state/
+deploy/launcher.lock
+**/__pycache__/

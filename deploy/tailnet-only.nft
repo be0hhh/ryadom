@@ -1,0 +1,11 @@
+# Apply manually BEFORE start.sh, in the SAME WSL network namespace as Docker.
+# This table owns only Ryadom media ingress; it does not replace the host firewall.
+# Check for an existing table before applying; do not apply twice.
+# No flush ruleset / OS persistence.
+table inet ryadom_media {
+    chain input {
+        type filter hook input priority -10; policy accept;
+        iifname != "tailscale0" iifname != "lo" tcp dport 7881 drop
+        iifname != "tailscale0" iifname != "lo" udp dport 7882 drop
+    }
+}

@@ -1,0 +1,30 @@
+import java.net.URI
+import java.net.Authenticator
+import java.net.PasswordAuthentication
+
+def raw = System.getenv('HTTPS_PROXY') ?: System.getenv('https_proxy')
+if (raw) {
+    def proxy = new URI(raw)
+    ['http', 'https'].each { scheme ->
+        System.setProperty("${scheme}.proxyHost", proxy.host)
+        System.setProperty("${scheme}.proxyPort", "${proxy.port > 0 ? proxy.port : 80}")
+    }
+    if (proxy.userInfo) {
+        def parts = proxy.userInfo.split(':', 2)
+        ['http', 'https'].each { scheme ->
+            System.setProperty("${scheme}.proxyUser", parts[0])
+            System.setProperty("${scheme}.proxyPassword", parts.length > 1 ? parts[1] : '')
+        }
+        System.setProperty('jdk.http.auth.tunneling.disabledSchemes', '')
+        System.setProperty('jdk.http.auth.proxying.disabledSchemes', '')
+        Authenticator.setDefault(new Authenticator() {
+            protected PasswordAuthentication getPasswordAuthentication() {
+                if (getRequestorType() == Authenticator.RequestorType.PROXY) {
+                    return new PasswordAuthentication(parts[0], (parts.length > 1 ? parts[1] : '').toCharArray())
+                }
+                return null
+            }
+        })
+    }
+    System.setProperty('http.nonProxyHosts', 'localhost|127.*|[::1]')
+}
